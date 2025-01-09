@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -94,5 +95,29 @@ public class ClientesPanel extends JPanel {
                 JOptionPane.showMessageDialog(this, "Erro ao adicionar cliente: " + ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
             }
         });
+
+        // Carregar clientes do banco de dados ao iniciar o painel
+        loadClientes();
+    }
+
+    private void loadClientes() {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            String sql = "SELECT id_cliente, nome, email, telefone, endereco, data_cadastro FROM clientes";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                int idCliente = rs.getInt("id_Cliente");
+                String nome = rs.getString("nome");
+                String email = rs.getString("email");
+                String telefone = rs.getString("telefone");
+                String endereco = rs.getString("endereco");
+                String dataCadastro = rs.getString("data_cadastro");
+
+                tableModel.addRow(new Object[]{idCliente, nome, email, telefone, endereco, dataCadastro});
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Erro ao carregar clientes: " + ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+        }
     }
 }
