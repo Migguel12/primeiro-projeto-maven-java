@@ -1,3 +1,4 @@
 src/main/java/com/artvideo/services/DatabaseConnection.java
 target/
 src/main/resources/client_secrets.json
+melhorias.txt
