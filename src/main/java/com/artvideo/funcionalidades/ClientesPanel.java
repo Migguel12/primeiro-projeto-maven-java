@@ -56,6 +56,17 @@ public class ClientesPanel extends JPanel {
 
         add(addPanel, BorderLayout.SOUTH);
 
+        // Painel para busca de clientes
+        JPanel searchPanel = new JPanel(new BorderLayout(10, 10));
+        JTextField searchField = new JTextField();
+        JButton searchButton = new JButton("Buscar");
+
+        searchPanel.add(new JLabel("Buscar por Nome:"), BorderLayout.WEST);
+        searchPanel.add(searchField, BorderLayout.CENTER);
+        searchPanel.add(searchButton, BorderLayout.EAST);
+
+        add(searchPanel, BorderLayout.NORTH);
+
         // Ação do botão "Adicionar"
         addButton.addActionListener(e -> {
             String nome = nomeField.getText();
@@ -96,6 +107,12 @@ public class ClientesPanel extends JPanel {
             }
         });
 
+        // Ação do botão "Buscar"
+        searchButton.addActionListener(e -> {
+            String nomePesquisa = searchField.getText();
+            buscarClientes(nomePesquisa);
+        });
+
         // Carregar clientes do banco de dados ao iniciar o painel
         loadClientes();
     }
@@ -107,7 +124,7 @@ public class ClientesPanel extends JPanel {
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
-                int idCliente = rs.getInt("id_Cliente");
+                int idCliente = rs.getInt("id_cliente");
                 String nome = rs.getString("nome");
                 String email = rs.getString("email");
                 String telefone = rs.getString("telefone");
@@ -118,6 +135,32 @@ public class ClientesPanel extends JPanel {
             }
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Erro ao carregar clientes: " + ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void buscarClientes(String nomePesquisa) {
+        // Limpa a tabela antes de exibir os resultados da busca
+        tableModel.setRowCount(0);
+
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            String sql = "SELECT id_cliente, nome, email, telefone, endereco, data_cadastro FROM clientes WHERE nome LIKE ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setString(1, "%" + nomePesquisa + "%");
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                int idCliente = rs.getInt("id_cliente");
+                String nome = rs.getString("nome");
+                String email = rs.getString("email");
+                String telefone = rs.getString("telefone");
+                String endereco = rs.getString("endereco");
+                String dataCadastro = rs.getString("data_cadastro");
+
+                // Adiciona os dados à tabela
+                tableModel.addRow(new Object[]{idCliente, nome, email, telefone, endereco, dataCadastro});
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Erro ao buscar clientes: " + ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }
 }
