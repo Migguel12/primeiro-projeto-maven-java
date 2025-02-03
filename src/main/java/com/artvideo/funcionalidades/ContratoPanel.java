@@ -33,6 +33,7 @@ public class ContratoPanel extends JPanel {
     private final JComboBox<String> clienteComboBox;
     private final JTextField pesquisaField;
     private final JButton gerarContratoButton;
+    private final JButton editarClausulasButton;
     private final Map<String, Integer> clienteMap; // Map para associar o nome do cliente ao ID
     private final DefaultListModel<String> contratoListModel; // Modelo para a lista de contratos
     private final JList<String> contratoList; // Lista para exibir os contratos gerados
@@ -84,6 +85,8 @@ public class ContratoPanel extends JPanel {
             }
         });
 
+        JPanel botoesPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+
         // Botão para gerar contrato
         gerarContratoButton = new JButton("Gerar Contrato");
         gerarContratoButton.addActionListener(e -> {
@@ -96,7 +99,16 @@ public class ContratoPanel extends JPanel {
         });
 
         // Adiciona o botão de gerar contrato ao painel
-        add(gerarContratoButton, BorderLayout.SOUTH);
+        // add(gerarContratoButton, BorderLayout.SOUTH);
+
+        // Botão de editar as clausulas
+        editarClausulasButton = new JButton("Editar Cláusulas");
+        editarClausulasButton.addActionListener(e -> new EditarClausulasFrame());
+        
+        botoesPanel.add(gerarContratoButton);
+        botoesPanel.add(editarClausulasButton);
+
+        add(botoesPanel, BorderLayout.SOUTH);
 
         // Seção para exibir a lista de contratos
         JPanel contratoPanel = new JPanel(new BorderLayout());
@@ -181,14 +193,29 @@ public class ContratoPanel extends JPanel {
         }
     }
 
+    private String carregarClausulasDoBanco() {
+        StringBuilder clausulas = new StringBuilder();
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement("SELECT texto_clausula FROM clausulas_contrato");
+             ResultSet resultSet = statement.executeQuery()) {
+    
+            while (resultSet.next()) {
+                clausulas.append(resultSet.getString("texto_clausula")).append("\n");
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Erro ao carregar cláusulas: " + e.getMessage());
+        }
+        return clausulas.toString();
+    }
+    
+
     private void gerarContratoPDF(String cliente) {
         try {
             // Obter o ID do cliente a partir do mapa
             Integer clienteId = clienteMap.get(cliente);
 
             // Texto base do contrato
-            String clausulas = "Contrato entre a empresa ArtVideo e o cliente " + cliente + ".\n" +
-                    "Cláusulas: \n1. O cliente concorda com os termos...\n2. Prazo de validade: 12 meses.";
+            String clausulas = carregarClausulasDoBanco();
 
             // Nome do arquivo PDF
             String fileName = "Contrato_" + cliente.replace(" ", "_") + ".pdf";
